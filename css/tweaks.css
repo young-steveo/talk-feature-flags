@@ -1,0 +1,128 @@
+.blue {
+	color: #1b91ff;
+}
+.strikethrough {
+    position: relative;
+}
+.strikethrough:before {
+    position: absolute;
+    content: "";
+    left: -20px;
+    top: 45%;
+    right: -20px;
+    border-top: 15px solid;
+    border-color: #C74F4F;
+    transform: rotate(-10deg);
+}
+
+.flawed-left {
+	position: relative;
+	left: 135px;
+}
+
+.flawed-right {
+	position: relative;
+	right: 178px;
+}
+
+.fragment.code-vanish {
+	display:none;
+}
+
+.fragment.code-vanish.visible {
+	display:inline;
+}
+
+.point-left {
+	position: relative;
+}
+
+.point-left:before {
+	content:"\2190 ";
+    position:absolute;
+    font-size:52px;
+    top:4px;
+	animation: bounceLeft ease-in-out 3.5s;
+	animation-iteration-count: infinite;
+	transform-origin: 50% 50%;
+	-webkit-animation: bounceLeft ease-in-out 3.5s;
+	-webkit-animation-iteration-count: infinite;
+	-webkit-transform-origin: 50% 50%;
+}
+
+.cross {
+	position: relative;
+}
+
+.cross.visible:before {
+	content:"\274c ";
+    position:absolute;
+    font-size:20px;
+    top:2px;
+	animation: scaleDown cubic-bezier(0.62, 0.18, 1, 1) 0.5s;
+	transform-origin: 50% 50%;
+	transform:scale(3);
+	-webkit-animation: scaleDown cubic-bezier(0.62, 0.18, 1, 1) 0.5s;
+	-webkit-transform-origin: 50% 50%;
+	-webkit-transform:scale(3);
+	animation-fill-mode: forwards;
+}
+
+.reveal pre code {
+	max-height: 460px;
+}
+
+
+body:after {
+	content: url(../img/dpc-crop-dark.png);
+	position: fixed;
+	bottom: 10px;
+	left: 10px;
+	opacity: 0.3;
+}
+
+@keyframes bounceLeft{
+  0% {
+    transform: translate(0, 0);
+  }
+  65% {
+    transform: translate(7px, 0);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@-webkit-keyframes bounceLeft {
+  0% {
+    -webkit-transform: translate(0, 0);
+  }
+  65% {
+    -webkit-transform: translate(7px, 0);
+  }
+  100% {
+    -webkit-transform: translate(0, 0);
+  }
+}
+
+@keyframes scaleDown {
+	0% {
+		transform: scale(3);
+		opacity: 0;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+@-webkit-keyframes scaleDown {
+	0% {
+		-webkit-transform: scale(3);
+		opacity: 0;
+	}
+	100% {
+		-webkit-transform: scale(1);
+		opacity: 1;
+	}
+}

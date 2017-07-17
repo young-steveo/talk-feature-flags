@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Feature Flags</title>
+
+        <meta name="description" content="Feature Flags">
+        <meta name="author" content="Stephen Young">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+        <link rel="stylesheet" href="css/reveal.css">
+        <link rel="stylesheet" href="css/theme/solarized.css" id="theme">
+        <link rel="stylesheet" href="lib/css/github.css">
+        <link rel="stylesheet" href="css/tweaks.css">
+
+        <script src="js/print.js"></script>
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                <section>
+                    <h1>Feature Flags Are <br> Flawed</h1>
+                    <h3>Let's Make Them Better</h3>
+                    <p>
+                        <small>Created by Stephen Young / <a href="https://twitter.com/young_steveo">@young_steveo</a></small>
+                    </p>
+                    <aside class="notes" data-markdown>
+                        Last talk before closing.  Thank you for joining me.
+                        Thanks fto iBuildings and DPC for a wonderful conference.
+                    </aside>
+                </section>
+                <section>
+                    <img src="img/zumba.tech.light.svg"
+                        style="padding:50px;height:50%;width:50%;border:none;">
+                    <aside class="notes" data-markdown>
+                        * 180 countries / 15 mil / week
+                        * 12 mil pageviews
+                        * 1.3 mil users
+                        * Instructor portal / Streaming music and video
+                        * We use PHP to solve problems. Continuous Delivery.
+                    </aside>
+                </section>
+                <section>
+                    <h2>Feature Flag?</h2>
+                    <blockquote cite="http://martinfowler.com/bliki/FeatureToggle.html">
+                        <p>I've seen a lot of names for this concept tossed around: feature bits, flags, flippers, switches and the like. There seems no generally accepted name yet.</p>
+                        <footer>
+                            &mdash;
+                            <cite>
+                                <a href="http://martinfowler.com/bliki/FeatureToggle.html">Martin Fowler</a>
+                            </cite>
+                        </footer>
+                    </blockquote>
+                    <aside class="notes" data-markdown>
+                        technique that attempts to provide an alternative to maintaining multiple branches
+
+                        * explain feature branch
+                        * unfinished code lives longer than a sprint
+                        * long-lived branch merge conflicts
+                        * long-lived branch maintenance
+                    </aside>
+                </section>
+                <section>
+                    <h2>Simple Toggle</h2>
+                    <pre><code class="php" data-noescape>class AmazingRecipe
+{
+    public function getSauce()
+    {
+
+        <span class="fragment code-vanish" data-fragment-index="1">$useNewRecipe = false; <span class="fragment current-visible point-left" data-fragment-index="1"></span>
+
+        </span><span class="fragment code-vanish" data-fragment-index="6">// $useNewRecipe = true; <span class="fragment current-visible point-left" data-fragment-index="6"></span>
+
+        </span><span class="fragment code-vanish" data-fragment-index="2">if ($useNewRecipe) { <span class="fragment current-visible point-left" data-fragment-index="2"></span>
+            // new formula here <span class="fragment current-visible point-left" data-fragment-index="3"></span>
+        } else { <span class="fragment current-visible point-left" data-fragment-index="4"></span>
+            </span>// original code here <span class="fragment current-visible point-left" data-fragment-index="5"></span>
+        <span class="fragment code-vanish" data-fragment-index="2">}
+        </span>
+    }
+}</code></pre>
+                    <aside class="notes" data-markdown>
+                        "Hey Bob, uncomment this line when working on the new sauce."
+                    </aside>
+                </section>
+                <section>
+                    <h1>
+                        <span class="fragment blue" data-fragment-index="1">Traditional<br></span>
+                        <span>Feature Flags Are<span class="fragment" data-fragment-index="3">&hellip;</span></span>
+                        <span class="fragment fade-out flawed-left" data-fragment-index="2">Flawed</span>
+                        <span class="fragment strikethrough flawed-right" data-fragment-index="2">Flawed</span>
+                    </h1>
+                    <h4 class="fragment" data-fragment-index="3">...actually pretty useful and not really flawed per se, but they come with a few challenges and I think we can improve the model, so</h4>
+                    <h3>Let's Make Them Better</h3>
+                    <aside class="notes" data-markdown>
+                        Traditional feature flags (done better than the simple if) are awesome
+                    </aside>
+                </section>
+                <section>
+                    <h2>Simple Toggle</h2>
+                    <pre><code class="php" data-noescape>class AmazingRecipe
+{
+    public function getSauce()
+    {
+        $useNewRecipe = false;<span class="fragment current-visible point-left" data-fragment-index="1"></span><span class="fragment cross" data-fragment-index="2"></span>
+        // $useNewRecipe = true;<span class="fragment current-visible point-left" data-fragment-index="1"></span><span class="fragment cross" data-fragment-index="2"></span>
+
+        if ($useNewRecipe) {
+            // new formula here
+        } else {
+            // original code here
+        }
+    }
+}</code></pre>
+                    <p class="fragment" data-fragment-index="2">Not Testable</p>
+                    <aside class="notes" data-markdown>
+                        Before getting to the drawbacks, I need to improve the simple example to be more like a traditional feature flag system
+
+                        Static code needs to go
+                    </aside>
+                </section>
+                <section>
+                    <h2>Simple Toggle v2</h2>
+                    <pre><code class="php" data-noescape>class AmazingRecipe
+{
+    public function getSauce()
+    {
+        if ($this->useNewRecipe()) {<span class="point-left"></span>
+            // new formula here
+        } else {
+            // original code here
+        }
+    }
+    public function useNewRecipe()<span class="point-left"></span>
+    {
+        return false; // true
+    }
+}</code></pre>
+                    <p class="fragment">Can Be Stubbed</p>
+                    <aside class="notes" data-markdown>
+                        Moved boolean to a method that can be stubbed.
+                    </aside>
+                </section>
+                <section>
+                    <h2>Mock Toggle</h2>
+                    <pre><code class="php" data-noescape>/**
+ * @dataProvider newFormulaProvider <span class="fragment current-visible point-left" data-fragment-index="1"></span>
+ */
+public function testGetSauce($useNew, $sauce) <span class="fragment current-visible point-left" data-fragment-index="2"></span>
+{
+    $sut = $this->getMock('AmazingRecipe', ['useNewRecipe']);
+    $sut->expects($this->once())
+        ->method('useNewRecipe')
+        ->will($this->returnValue($useNew));
+    $this->assertEquals($sauce, $sut->getSauce());
+}
+
+public function newFormulaProvider() <span class="fragment current-visible point-left" data-fragment-index="1"></span>
+{
+    return [
+        [ false, 'old Recipe' ], <span class="fragment current-visible point-left" data-fragment-index="2"></span>
+        [ true, 'new Recipe' ] <span class="fragment current-visible point-left" data-fragment-index="2"></span>
+    ];
+}</code></pre>
+                </section>
+                <section>
+                    <h2>Simple Toggle v2</h2>
+                    <pre><code class="php" data-noescape>class AmazingRecipe
+{
+    public function getSauce()
+    {
+        if ($this->useNewRecipe()) {
+            // new formula here
+        } else {
+            // original code here
+        }
+    }
+    public function useNewRecipe()
+    {
+        return false; // true <span class="fragment current-visible point-left" data-fragment-index="1"></span> <span class="fragment cross" data-fragment-index="2"></span> <span class="fragment cross" data-fragment-index="3"></span> <span class="fragment cross" data-fragment-index="4"></span>
+    }
+}</code></pre>
+                    <ul>
+                        <li class="fragment" data-fragment-index="2">Not Maintainable</li>
+                        <li class="fragment" data-fragment-index="3">Not Configurable</li>
+                        <li class="fragment" data-fragment-index="4">Not My Concern</li>
+                    </ul>
+                    <aside class="notes" data-markdown>
+                        * Not Maintainable
+                        * Not Configurable
+                        * Not My Concern
+
+                        Need to centralize flags
+                    </aside>
+                </section>
+                <section>
+                    <h2>Feature Router</h2>
+                    <pre><code class="php" data-noescape>class AmazingRecipe
+{
+    public function getSauce()
+    {
+        if ($this->useNewRecipe()) { <span class="fragment current-visible point-left" data-fragment-index="2"></span>
+            // new formula here
+        } else {
+            // original code here
+        }
+    }
+    public function useNewRecipe()
+    {
+        return Flags::enabled('AmazingRecipie.NewSauceFormula'); <span class="fragment current-visible point-left" data-fragment-index="1"></span>
+    }
+}</code></pre>
+                    <aside class="notes" data-markdown>
+                        * Class with static methods
+                        * Still wrapped to keep it mockable
+                    </aside>
+                </section>
+                <section>
+                    <h2>Feature Router</h2>
+                    <pre><code class="php" data-noescape>final class Flags <span class="fragment current-visible point-left"></span>
+{
+    protected static $map = []; <span class="fragment current-visible point-left"></span>
+    public static function enabled($key) <span class="fragment current-visible point-left"></span>
+    {
+        if (empty(static::$map)) { <span class="fragment current-visible point-left"></span>
+            // hydrate map <span class="fragment current-visible point-left"></span>
+        }
+        return !empty(static::$map[$key]); <span class="fragment current-visible point-left"></span>
+    }
+}</code></pre>
+                    <aside class="notes" data-markdown>
+                        Hydration options
+
+                        * Config file
+                        * Environment variables
+                        * Database
+                        * External service
+                    </aside>
+                </section>
+                <section>
+                    <h2>Traditional Feature Flag System</h2>
+                    <ul>
+                        <li class="fragment"><p>Curb Long-Lived Feature Branches</p></li>
+                        <li class="fragment"><p>Easy To Use (If This Then That)</p></li>
+                        <li class="fragment"><p>Testable</p></li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>Tons of Applications</h2>
+                    <ul>
+                        <li class="fragment">Release Toggles - change frequently, short lived</li>
+                        <li class="fragment">Timed Releases</li>
+                        <li class="fragment">Operations Toggles - sometimes long lived, rarely change</li>
+                    </ul>
+                    <aside class="notes" data-markdown>
+                        For ops toggles, image an expensive, non-essential operation that is turned off during peak hours
+                    </aside>
+                </section>
+                <section>
+                    <h2>What's Not To Like?</h2>
+                    <img src="img/facebook-like.png"
+                        style="padding:50px;height:50%;width:50%;border:none;">
+                </section>
+                <section>
+                    <h2>Cyclomatic Complexity</h2>
+                    <pre><code class="php" data-noescape>public function getSauce()
+{
+    if ($this->useNewRecipe()) {
+        <span class="fragment code-vanish" data-fragment-index="1">if ($this->testSpicyVersion()) { <span class="fragment current-visible point-left" data-fragment-index="1"></span>
+            // add spice
+        }</span>
+        <span class="fragment code-vanish" data-fragment-index="2">if ($this->fixEnabled()) { <span class="fragment current-visible point-left" data-fragment-index="2"></span>
+            // fix bug in new code
+        }</span>
+    } else {
+        // original code here
+        <span class="fragment code-vanish" data-fragment-index="2">if ($this->fixEnabled()) {<span class="fragment current-visible point-left" data-fragment-index="2"></span>
+            // fix bug in old code
+        }</span>
+    }
+}</code></pre>
+                    <p class="fragment" data-fragment-index="3">Complexity: 5</p>
+                    <aside class="notes" data-markdown>
+                        5 is not exceptionally high, but:
+
+                        * Assumes the application code contains no control statements
+                        * Sprinkled all over the code base, average CC of entire application increased.
+                    </aside>
+                </section>
+                <section>
+                    <h2 style="padding-top:200px;">All or Nothing</h2>
+                    <aside class="notes" data-markdown>
+                        Trun on feature flag that contains a bug.  Code explodes for all active users.
+
+                        * Loss of Revenue
+                        * Stress and Chaos
+                        * Works for a week ?
+                    </aside>
+                </section>
+                <section>
+                    <h2 style="padding-top:200px;">Canary Deployments</h2>
+                    <aside class="notes" data-markdown>
+                        Scenario:  Turn on feature for 10% of active users
+
+                        You need to have metrics.
+                    </aside>
+                </section>
+                <section>
+                    <h2>Cohorts</h2>
+                    <blockquote cite="https://en.wikipedia.org/wiki/Cohort_(statistics)">
+                        <p>[&hellip;] a cohort is a group of subjects who have shared a particular event together during a particular time span.</p>
+                        <footer>
+                            &mdash;
+                            <cite>
+                                <a href="https://en.wikipedia.org/wiki/Cohort_(statistics)">Wikipedia</a>
+                            </cite>
+                        </footer>
+                    </blockquote>
+                </section>
+                <section>
+                    <h2>More Conditions?</h2>
+                    <pre><code class="php" data-noescape>if (
+    Flags::enabled('SomeFeature') &&
+    $user->canSeeFeature('SomeFeature')
+) {
+    // execute feature code
+}</code></pre><pre><code class="php" data-noescape>class User
+{
+    public function canSeeFeature($feature)
+    {
+        //  check the db or user session?
+    }
+}</code></pre>
+                    <aside class="notes" data-markdown>
+                        * Need to keep all the logic in one place.
+                        * Adds more complexity
+
+                        We had this problem at Zumba. Lots of Users. Complexity scattered.  Wrote a library.
+                    </aside>
+                </section>
+                <section>
+                    <h2>Introducing <strong><a href="https://github.com/zumba/swivel">Swivel</a></strong></h2>
+                    <ul>
+                        <li class="fragment">
+                            <p><strong>Swivel</strong> can enable features for a subset of users.</p>
+                        </li>
+                        <li class="fragment">
+                            <p>No more complex control flow; <strong>Swivel</strong> takes care of determining code paths.</p>
+                        </li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>Basic Concepts</h2>
+                    <ol>
+                        <li class="fragment" data-fragment-index="1">
+                            <p>Segment users into 10 cohorts.  <span class="fragment" data-fragment-index="2"><strong>Swivel</strong> calls these <strong>Buckets</strong>.</span></p>
+                        </li>
+                        <li class="fragment" data-fragment-index="3">
+                            <p>Associate a <strong>Feature</strong> to a number of active <strong>Buckets</strong>.</p>
+                        </li>
+                        <li class="fragment" data-fragment-index="4">
+                            <p>Write code that runs when a particular <strong>Feature</strong> is enabled.  <span class="fragment" data-fragment-index="5"><strong>Swivel</strong> calls these <strong>Behaviors</strong>.</span></p>
+                        </li>
+                    </ol>
+                </section>
+                <section>
+                    <h2>Segment Users Into Buckets</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>id</th><th>user_id</th><th>bucket_id</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td><td>160</td><td>6</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td>2</td><td>956</td><td>2</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td>3</td><td>189</td><td>7</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td>4</td><td>412</td><td>2</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <aside class="notes" data-markdown>
+                        Best way I've found is to generate a random number when a user logs in,
+                        persist that data, and store it in a session.
+
+                        For anonymous users, set a cookie.  Do it for logged in users too, for client side reporting.
+                    </aside>
+                </section>
+                <section>
+                    <h2>Associate Features To Buckets</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>id</th><th>slug</th><th>buckets</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="fragment highlight-red" data-fragment-index="1">
+                                <td>1</td><td>"AwesomeSauce"</td><td>
+                                    "[<span class="fragment fade-out" data-fragment-index="1">1,2,3,4</span>]"
+                                </td>
+                            </tr>
+                            <tr class="fragment highlight-red" data-fragment-index="2">
+                                <td>2</td><td>"AwesomeSauce.Spicy"</td><td>"[1,2]"</td>
+                            </tr>
+                            <tr class="fragment highlight-red" data-fragment-index="2">
+                                <td>3</td><td>"AwesomeSauce.Saucy"</td><td>"[3,4]"</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <aside class="notes" data-markdown>
+                        Parent Feature grouping is a good idea, even with traditional Feature Flags
+                        May try to normalize with a bucket table and a many to many, but overkill.  YMMV
+                    </aside>
+                </section>
+                <section>
+                    <h2>Bootstrap</h2>
+                    <pre><code class="php" data-noescape>
+<span class="fragment code-vanish" data-fragment-index="1">$bucket = 5; // From Session or DB
+</span><span class="fragment code-vanish" data-fragment-index="2">
+$map = [
+    'AwesomeSauce' => [1,2,3,4],
+    'AwesomeSauce.Spicy' => [1,2],
+    'AwesomeSauce.Saucy' => [3,4]
+];
+</span><span class="fragment code-vanish" data-fragment-index="3">
+$config = new \Zumba\Swivel\Config($map, $bucket);
+</span><span class="fragment code-vanish" data-fragment-index="4">
+$swivel = new \Zumba\Swivel\Manager($config);
+</span>
+</code></pre>
+                </section>
+                <section>
+                    <h2>Toggle Example</h2>
+                    <pre><code class="php" data-noescape>class AmazingRecipe
+{
+    public function __construct(\Zumba\Swivel\Manager $swivel) <span class="fragment current-visible point-left" data-fragment-index="1"></span>
+    {
+        $this->swivel = $swivel; <span class="fragment current-visible point-left" data-fragment-index="2"></span>
+    }
+
+    public function getSauce()
+    {
+        return $this->swivel->forFeature('AwesomeSauce') <span class="fragment current-visible point-left" data-fragment-index="3"></span>
+            ->addBehavior('Spicy', [$this, 'getSpicyFormula']) <span class="fragment current-visible point-left" data-fragment-index="4"></span>
+            ->addBehavior('Saucy', [$this, 'getSaucyFormula']) <span class="fragment current-visible point-left" data-fragment-index="5"></span>
+            ->defaultBehavior([$this, 'getFormula']) <span class="fragment current-visible point-left" data-fragment-index="6"></span>
+            ->execute(); <span class="fragment current-visible point-left" data-fragment-index="7"></span>
+    }
+
+<span class="fragment" data-fragment-index="8">    protected function getSpicyFormula() { }
+    protected function getSaucyFormula() { }
+    protected function getFormula() { }</span>
+}</code></pre>
+                    <aside class="notes" data-markdown>
+                        Buckets abstracted away.
+                        Could have many formulas in the example.
+                    </aside>
+                </section>
+                <section>
+                    <h2>Shorthand Example</h2>
+                    <pre><code class="php" data-noescape>class AmazingRecipe
+{
+    public function __construct(\Zumba\Swivel\Manager $swivel)
+    {
+        $this->swivel = $swivel;
+    }
+
+    public function getSauce()
+    {
+        return $this->swivel->invoke(
+            'AwesomeSauce.New',
+            [$this, 'getNewSauce'],
+            [$this, 'getOldSauce']
+        );
+    }
+}</code></pre>
+                </section>
+                <section>
+                    <h2 style="padding-top:200px;">Metrics for <strong>Canary Deployments</strong></h2>
+                    <aside class="notes" data-markdown>
+                        This is all useless without metrics
+
+                        Fatal Errors?
+                        Server Response Time?
+
+                        Tag all logs with the bucket number.
+                    </aside>
+                </section>
+                <section>
+                    <h2>Swivel Logging</h2>
+                    <h3>PSR-3 Logger Aware</h3>
+                    <pre><code class="php" data-noescape>$config = new \Zumba\Swivel\Config($map, $bucket, $psr3Logger);
+
+// or
+
+$config->setLogger($psr3Logger);</code></pre>
+                    <aside class="notes" data-markdown>
+                        Swivel will automatically log when code paths are triggered.
+                    </aside>
+                </section>
+                <section>
+                    <h2>Swivel Metrics</h2>
+                    <h3>statsd style metrics interface</h3>
+                    <pre><code class="php" data-noescape>interface MetricsInterface {
+  public function count($context, $source, $value, $metric);
+  public function decrement($context, $source, $metric);
+  public function endMemoryProfile($context, $source, $metric);
+  public function endTiming($context, $source, $metric);
+  public function gauge($context, $source, $value, $metric);
+  public function increment($context, $source, $metric);
+  public function memory($context, $source, $memory, $metric);
+  public function set($context, $source, $value, $metric);
+  public function setNamespace($namespace);
+  public function startMemoryProfile($context, $source, $metric);
+  public function startTiming($context, $source, $metric);
+  public function time($context, $source, \Closure $func, $metric);
+  public function timing($context, $source, $value, $metric);
+}</code></pre>
+                </section>
+                <section>
+                    <h2 style="padding-top:200px;">Metrics for <strong>A/B Testing</strong></h2>
+                    <aside class="notes" data-markdown>
+                        This is all useless without metrics
+
+                        Tag google analytics with bucket number.
+                        Funnels.
+                    </aside>
+                </section>
+                <section>
+                    <h2>More Applications</h2>
+                    <ul>
+                        <li>Release Toggles</li>
+                        <li>Timed Releases</li>
+                        <li>Operations Toggles</li>
+                        <li class="fragment">Experiments</li>
+                        <li class="fragment">Permissions?</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2 style="padding-top:200px;">Complexity</h2>
+                    <aside class="notes" data-markdown>
+                        Swivel pushes dev to toggle at high level behaviors rather than low level deviations
+                        Won't prevent complexity 100%.
+                        Hard problems:  Schema changes.  Missing Data.
+                    </aside>
+                </section>
+                <section>
+                    <h2>Traditional Feature Flags</h2>
+                    <h3 class="fragment">Pros</h3>
+                    <ul>
+                        <li class="fragment">Eliminate Long Lived Branches</li>
+                        <li class="fragment">Disable Problematic Code</li>
+                    </ul>
+                    <h3 class="fragment">Cons</h3>
+                    <ul>
+                        <li class="fragment">Complexity Bump</li>
+                        <li class="fragment">All Or Nothing</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2><strong>Cohort</strong> Feature Flags</h2>
+                    <h3>Pros</h3>
+                    <ul>
+                        <li>Eliminate Long Lived Branches</li>
+                        <li>Disable Problematic Code</li>
+                        <li class="fragment" data-fragment-index="2">Roll Out Features</li>
+                        <li class="fragment" data-fragment-index="3">A/B Testing</li>
+                    </ul>
+                    <h3>Cons</h3>
+                    <ul>
+                        <li><span class="fragment highlight-blue" data-fragment-index="4">Complexity Bump</span></li>
+                        <li style="position:relative;"><span style="position:absolute;left:0;" class="fragment strikethrough" data-fragment-index="1">All Or Nothing</span><span class="fragment fade-out" data-fragment-index="1">All Or Nothing</span></li>
+                    </ul>
+                </section>
+                <section>
+                    <h2><strong>Swivel</strong> Feature Flags</h2>
+                    <h3>Pros</h3>
+                    <ul>
+                        <li>Eliminate Long Lived Branches</li>
+                        <li>Disable Problematic Code</li>
+                        <li>Roll Out Features</li>
+                        <li>A/B Testing</li>
+                        <li class="fragment">Built In Logging</li>
+                        <li class="fragment">Built In Metrics</li>
+                    </ul>
+                    <h3>Cons</h3>
+                    <ul>
+                        <li><span class="fragment highlight-blue">Complexity Bump</span></li>
+                    </ul>
+                </section>
+                <section>
+                    <h2><strong><a href="https://github.com/zumba/swiveljs">SwivelJS</a></strong></h2>
+                    <pre><code class="javascript" data-noescape>swivel
+    .forFeature('AwesomeSauce')
+    .addBehavior('Spicy', this.getSpicyFormula)
+    .addBehavior('Saucy', this.getSaucyFormula)
+    .defaultBehavior(this.getFormula)
+    .execute();</code></pre>
+                    <aside class="notes" data-markdown>
+                        Sometimes we build single page apps.
+                    </aside>
+                </section>
+                <section>
+                    <h2><strong>Community Packages</strong></h2>
+                    <p>ZF2 module: <a href="https://github.com/mrferos/mrf-swivel">https://github.com/mrferos/mrf-swivel</a></p>
+                    <p>Yii extension: <a href="https://github.com/DanaLuther/yii-swivel">https://github.com/DanaLuther/yii-swivel</a></p>
+                    <p>Yii 2.0 extension: <a href="https://github.com/DanaLuther/yii2-swivel">https://github.com/DanaLuther/yii2-swivel</a></p>
+                    <p>CakePHP 2 Plugin: <a href="https://github.com/zumba/swivel-cake">https://github.com/zumba/swivel-cake</a>
+                </section>
+                <section>
+                    <h2>Roadmap</h2>
+                    <ul>
+                        <li class="fragment">Bucket Ranges</li>
+                        <li class="fragment">Configurable Granularity</li>
+                        <li class="fragment">CakePHP 3.0 Plugin</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2 style="padding-top:200px;">Questions?</h2>
+                </section>
+                <section>
+                    <h2>Go Forth And Toggle!</h2>
+                    <p>Twitter: <a href="https://twitter.com/young_steveo">@young_steveo</a></p>
+                    <p>Swivel: <a href="https://github.com/zumba/swivel">https://github.com/zumba/swivel</a></p>
+                    <p>Joindin: <a href="https://legacy.joind.in/17583">https://legacy.joind.in/17583</a></p>
+                    <img src="img/qr-code-joindin.png" width="200" height="200" />
+                    <h4>Thanks!</h4>
+                </section>
+            </div>
+        </div>
+        <script src="lib/js/head.min.js"></script>
+        <script src="js/reveal.js"></script>
+        <script src="js/main.js"></script>
+    </body>
+</html>
+
